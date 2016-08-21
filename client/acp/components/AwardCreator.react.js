@@ -6,27 +6,77 @@ var React            = require('react'),
     PromptView       = require('./PromptView.react'),
     pathUtils        = require('../utils/PathUtils'),
     Actions          = require('../actions/Actions');
+    
 
 var AwardCreator = React.createClass({
     mixins: [LinkedStateMixin],
 
     getInitialState: function () {
         return {
-            action : pathUtils.getApiImages(),
-            dataUrl: '',
-            name   : '',
-            desc   : '',
-            open   : false
+            action   : pathUtils.getApiImages(),
+            dataUrl  : '',
+            name     : '',
+            desc     : '',
+            open     : false,
+            cond     : '',
+            condval  : '',
+            reason   : '',
+            type     : '',
+            limit    : '',
+            autoAward: false
         };
     },
 
     render: function () {
-        var panelContent, error;
+        var panelContent, autoAward, error;
 
         if (this.state.errorMessage) {
             error = <div className="alert alert-danger" role="alert">Error: {this.state.errorMessage}</div>;
         }
-
+        
+        /* 
+        * valueLink is deprecated in React 15.*
+        * Probably this all thing should be changed.
+        * Don't know why but upgrading React breaks the code.
+        *
+        */
+        if (this.state.autoAward) {
+            autoAward = <div>
+            <div className="form-group">
+                <label htmlFor="awardType">Type</label>
+                <select className="form-control" id="awardType" valueLink={this.linkState('type')}>
+                    <option value="" disabled>Choose one...</option>
+                    <option value="postCnt">Post Count</option>
+                    <option value="rep">Reputation</option>
+                </select>
+            </div> 
+            <div className="form-group">
+                <label htmlFor="awardContition">Condition</label>
+                <select className="form-control" id="awardCondition" valueLink={this.linkState('cond')} >
+                    <option value="" disabled>Choose one...</option>
+                    <option value="every">every</option>
+                    <option value="equal">=</option>
+                </select>
+                <input
+                    type="text" className="form-control" id="awardCondVal" placeholder="Enter a number"
+                    valueLink={this.linkState('condval')}/>
+            </div>
+            <div className="form-group">
+                    <label htmlFor="awardReason">Reason</label>
+                    <textarea className="form-control" rows="4" id="awardReason"
+                              placeholder="Enter the reason that should be displayed for automatic awards"
+                              valueLink={this.linkState('reason')}></textarea>
+             </div>
+            <div className="form-group">
+                <label htmlFor="awardLimit">Limit (total number of awards that can be obtained by everyone, not only a single user)</label>
+                <input
+                    type="text" className="form-control" id="awardLimit" placeholder="Enter a number (0 for infinite)"
+                    valueLink={this.linkState('limit')}/>
+            </div>
+            
+        </div>;
+        } 
+        
         if (this.state.open) {
             panelContent = <form className="create-award-form">
                 <div className="media">
@@ -55,6 +105,9 @@ var AwardCreator = React.createClass({
                               placeholder="Enter full description"
                               valueLink={this.linkState('desc')}></textarea>
                 </div>
+                   <input type="checkbox" onChange={this._toggleAutoAward} />
+                    <span>Automatic Award</span>    
+                 {autoAward}      
                 <PanelControls labelSuccess="Add" valid={this._isValid} cancelDidClick={this._cancelAwardForm}
                                successDidClick={this._createAward}/>
             </form>;
@@ -73,13 +126,31 @@ var AwardCreator = React.createClass({
             </div>
         );
     },
+    
+     _setType: function (value) {
+       this.setState({
+          type: value 
+       });
+    },
+    
+    _setCond: function (value) {
+       this.setState({
+          cond: value 
+       });
+    },
+    
+    _toggleAutoAward: function () {
+       this.setState({
+          autoAward: !this.state.autoAward 
+       });
+    },
 
     _cancelAwardForm: function () {
         this.replaceState(this.getInitialState());
     },
 
     _createAward: function () {
-        Actions.createAward(this.state.name, this.state.desc, this.state.fileServer.id);
+        Actions.createAward(this.state.name, this.state.desc, this.state.fileServer.id, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit);
         this._cancelAwardForm();
     },
 
@@ -88,9 +159,13 @@ var AwardCreator = React.createClass({
             dataUrl: dataUrl
         });
     },
-
+    
     _isValid: function () {
-        return !!this.state.name && !!this.state.desc && !!this.state.fileServer;
+        if (this.state.autoAward) {
+            return !!this.state.name && !!this.state.desc && !!this.state.fileServer && !!this.state.type && !!this.state.cond && !!this.state.condval && !!this.state.reason && !!this.state.limit;  
+        } else {
+            return !!this.state.name && !!this.state.desc && !!this.state.fileServer;
+        }
     },
 
     _promptViewDidClick: function () {

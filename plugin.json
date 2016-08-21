@@ -28,6 +28,14 @@
     {
       "hook": "static:app.load",
       "method": "hooks.statics.load"
+    },
+	  {
+	    "hook": "action:post.save",
+	    "method": "hooks.actions.onPost"
+	  },
+    {
+      "hook": "action:post.upvote",
+      "method": "hooks.actions.onUpvote"
     }
   ],
   "less": [

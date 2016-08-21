@@ -1,5 +1,10 @@
 # Changelog
 
+## v5.0.0 - 21/08/2016
+- added auto award system 
+- fixed notification not displayed
+- fixed page title in all awards page non displayed
+
 ## v3.0.0 - 03/16/2016
 
 - Compatibility with NodeBB v1.x

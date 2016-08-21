@@ -1,5 +1,5 @@
 var Actions          = require('../actions/Actions'),
-    assign           = require('react/lib/Object.assign'),
+    assign           = Object.assign,
     Autocomplete     = require('./Autocomplete.react'),
     EditUserStore    = require('../stores/EditUserStore'),
     React            = require('react'),

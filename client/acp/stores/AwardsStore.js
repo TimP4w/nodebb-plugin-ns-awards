@@ -1,6 +1,6 @@
 var AppDispatcher = require('../dispatcher/AppDispatcher'),
     EventEmitter  = require('events').EventEmitter,
-    assign        = require('react/lib/Object.assign'),
+    assign        = Object.assign,
     Constants     = require('../Constants'),
     socket        = require('socket'),
 
@@ -35,9 +35,14 @@ AppDispatcher.register(function (action) {
     switch (action.actionType) {
         case Constants.EVENT_CREATE_AWARD:
             socket.emit(API.CREATE_AWARD, {
-                name  : action.name,
-                desc  : action.desc,
-                fileId: action.fileId
+                name   : action.name,
+                desc   : action.desc,
+                fileId : action.fileId,
+                type   : action.type,
+                cond   : action.cond,
+                condval: action.condval,
+                reason : action.reason,
+                limit  : action.limit
             }, function (error, award) {
                 //Optimistic Award Create
                 _awards.push(award);
@@ -58,10 +63,15 @@ AppDispatcher.register(function (action) {
             break;
         case Constants.EVENT_EDIT_AWARD:
             socket.emit(API.EDIT_AWARD, {
-                id   : action.id,
-                name : action.name,
-                desc : action.desc,
-                image: action.file
+                id     : action.id,
+                name   : action.name,
+                desc   : action.desc,
+                image  : action.file,
+                type   : action.type,
+                cond   : action.cond,
+                condval: action.condval,
+                reason : action.reason,
+                limit  : action.limit
             }, function (error, award) {
                 if (error) {
                     return console.error(error);

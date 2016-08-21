@@ -68,8 +68,8 @@ var AwardsListView = React.createClass({
         })
     },
 
-    _itemWillSave: function (index, aid, name, description, file) {
-        Actions.editAward(aid, name, description, file);
+    _itemWillSave: function (index, aid, name, description, file, type, cond, condval, reason, limit) {
+        Actions.editAward(aid, name, description, file, type, cond, condval, reason, limit);
     }
 });
 

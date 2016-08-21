@@ -13,9 +13,14 @@
         </div>
         <div class="col-md-5 award-owners">
             <!-- BEGIN awards.grants -->
-            <span class="award-recipient"><a
-                        href="./user/{awards.grants.user.userslug}">{awards.grants.user.username}</a></span>
-            <!-- END awards.grants -->
+            <span class="award-recipient">
+              <!-- IF awards.grants.user.picture -->
+                <a href="./user/{awards.grants.user.userslug}"><img class="user-img" title="" alt="{awards.grants.user.username}" src="{awards.grants.user.picture}" data-original-title="{awards.grants.user.username}" ></a>
+              <!-- ELSE -->
+                <a href="./user/{awards.grants.user.userslug}"><div class="user-icon" style="background-color: {awards.grants.user.icon:bgColor};">{awards.grants.user.icon:text}</div></a>
+              <!-- ENDIF awards.grants.user.picture -->    
+           </span>      
+           <!-- END awards.grants -->
         </div>
     </div>
     <!-- END awards -->

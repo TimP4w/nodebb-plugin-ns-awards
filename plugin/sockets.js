@@ -75,7 +75,7 @@
 
             },
             function (file, next) {
-                    database.createAward(payload.name, payload.desc, uploads.getPublicImagePath(file), next);
+                    database.createAward(payload.name, payload.desc, uploads.getPublicImagePath(file), payload.type, payload.cond, payload.condval, payload.reason, payload.limit, next);
             }
         ], callback);
     };
@@ -114,7 +114,7 @@
     };
 
     Sockets.editAward = function (socket, payload, callback) {
-        controller.editAward(payload.id, payload.name, payload.desc, payload.image, callback);
+        controller.editAward(payload.id, payload.name, payload.desc, payload.image, payload.type, payload.cond, payload.condval, payload.reason, payload.limit, callback);
     };
 
     Sockets.editGrant = function (socket, payload, callback) {

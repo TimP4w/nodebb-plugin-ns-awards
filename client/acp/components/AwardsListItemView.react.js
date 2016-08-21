@@ -19,19 +19,73 @@ var AwardsListItemView = React.createClass({
 
     getInitialState: function () {
         return {
-            name     : this.props.award.name,
-            desc     : this.props.award.desc,
-            dataUrl  : '',
-            initImage: this.props.award.image
+            name         : this.props.award.name,
+            desc         : this.props.award.desc,
+            dataUrl      : '',
+            initImage    : this.props.award.image,
+            type         : this.props.award.type,
+            cond         : this.props.award.cond,
+            condval      : this.props.award.condval,
+            reason       : this.props.award.reason,
+            limit        : this.props.award.limit,
+            autoAwardForm: !!this.props.award.type
         }
     },
 
     render: function () {
-        var self     = this,
-            controls = getControls(this.props.edit),
-            content  = getContent(this.props.edit),
-            image    = getImage(this.props.edit);
-
+        var self        = this,
+            controls    = getControls(this.props.edit),
+            content     = getContent(this.props.edit),
+            autoContent = getAutoContent(this.state.autoAwardForm, this.props.edit),
+            image       = getImage(this.props.edit);
+        
+        function getAutoContent(type, edit) {
+            if (edit && type) {
+                return (
+                    <div className="award-edit">
+                        <div>
+                            <select value={self.state.type} onChange={self._typeDidChange}>
+                                <option value="" disabled>Choose one...</option>
+                                <option value="postCnt">Post Count</option>
+                                <option value="rep">Reputation</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select value={self.state.cond} onChange={self._conditionDidChange}>
+                                <option value="" disabled>Choose one...</option>
+                                <option value="every">every</option>
+                                <option value="equal">=</option>
+                            </select>   
+                            </div>
+                            <div>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Enter Condition Value"
+                                    value={self.state.condval}
+                                    onChange={self._condvalDidChange}/>
+                            </div>
+                            <div>
+                                <textarea className="form-control" rows="4"
+                                        placeholder="Enter reason"
+                                        value={self.state.reason}
+                                        onChange={self._reasonDidChange}></textarea>
+                            </div>
+                            <div>
+                            <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Enter Limit"
+                                    value={self.state.limit}
+                                    onChange={self._limitDidChange}/>
+                            </div>
+                      </div>
+                );
+            } else {
+                return "";
+            }
+        }
+        
         function getContent(edit) {
             if (edit) {
                 return (
@@ -50,18 +104,22 @@ var AwardsListItemView = React.createClass({
                                       value={self.state.desc}
                                       onChange={self._descriptionDidChange}></textarea>
                         </div>
+                        <input type="checkbox" onChange={self._toggleAutoAwardForm} checked={self.state.autoAwardForm} />
+                        <span>Automatic Award</span>  
                     </div>
+                    
                 );
             } else {
                 return (
                     <dl>
                         <dt>{self.props.award.name}</dt>
                         <dd>{self.props.award.desc}</dd>
+                        <dt>{ !self.props.award.type ? "Only manually" : "Auto award on " + self.props.award.type + " condition: " + self.props.award.cond + " " + self.props.award.condval + " Reason: " + self.props.award.reason + " Limit: " + self.props.award.limit}</dt>
                     </dl>
                 );
             }
         }
-
+        
         function getControls(edit) {
             if (edit) {
                 var controlOkClass = classNames({
@@ -120,6 +178,7 @@ var AwardsListItemView = React.createClass({
                     </div>
                     <div className="col-md-8">
                         {content}
+                        {autoContent}
                     </div>
                     <div className="col-md-2">
                         <div className="pull-right item-controls">{controls}</div>
@@ -128,7 +187,24 @@ var AwardsListItemView = React.createClass({
             </li>
         );
     },
-
+    
+     _toggleAutoAwardForm: function () {
+        if(this.state.autoAwardForm) {
+            this.setState({
+                autoAwardForm: !this.state.autoAwardForm,
+                type: '',
+                cond: '',
+                condval: '',
+                reason: '',
+                limit: ''  
+            });
+        } else {
+            this.setState({
+                autoAwardForm: !this.state.autoAwardForm
+            });
+        }
+    },
+    
     _cancel: function () {
         this.replaceState(this.getInitialState());
         this.props.itemWillCancel();
@@ -159,6 +235,36 @@ var AwardsListItemView = React.createClass({
             name: e.currentTarget.value
         });
     },
+    
+    _typeDidChange: function (e) {
+        this.setState({
+            type: e.currentTarget.value
+        });
+    },
+    
+     _conditionDidChange: function (e) {
+        this.setState({
+            cond: e.currentTarget.value
+        });
+    },
+    
+     _condvalDidChange: function (e) {
+        this.setState({
+            condval: e.currentTarget.value
+        });
+    },
+    
+     _reasonDidChange: function (e) {
+        this.setState({
+            reason: e.currentTarget.value
+        });
+    },
+    
+    _limitDidChange: function (e) {
+        this.setState({
+            limit: e.currentTarget.value
+        });
+    },
 
     _newImageDidSelect: function (file, dataUrl) {
         this.setState({
@@ -176,6 +282,13 @@ var AwardsListItemView = React.createClass({
     _isValid: function () {
         return (this.state.name && this.state.name !== this.props.award.name)
             || (this.state.desc && this.state.desc !== this.props.award.desc)
+            || (this.state.autoAwardForm && this.state.type && this.state.cond && this.state.condval && this.state.reason && this.state.limit && 
+                    (this.state.type !== this.props.award.type       || 
+                     this.state.cond !== this.props.award.cond       || 
+                     this.state.condval !== this.props.award.condval ||
+                     this.state.reason !== this.props.award.reason ||  
+                     this.state.limit !== this.props.award.limit)     )
+            || (!this.state.autoAwardForm && !this.state.type && !this.state.cond && !this.state.condval && !this.state.limit && this.state.type !== this.props.award.type)
             || this.state.fileServer;
     },
 
@@ -188,7 +301,7 @@ var AwardsListItemView = React.createClass({
 
     _save: function () {
         if (this._isValid()) {
-            this.props.itemWillSave(this.state.name, this.state.desc, this.state.fileServer);
+            this.props.itemWillSave(this.state.name, this.state.desc, this.state.fileServer, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit);
         }
     }
 });

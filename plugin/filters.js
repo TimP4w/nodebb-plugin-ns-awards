@@ -2,7 +2,7 @@
     'use strict';
 
     var controller = require('./controller');
-
+    
     /**
      * Hook to render user profile.
      * 'userData' will be used as payload in hook handler.

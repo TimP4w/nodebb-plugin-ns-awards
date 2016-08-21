@@ -11,7 +11,7 @@
         nextAwardId  = constants.GLOBAL_AWARD_COUNTER,
         nextGrantId  = constants.GLOBAL_GRANT_COUNTER;
 
-    Database.createAward = function (name, description, image, done) {
+    Database.createAward = function (name, description, image, type, condition, condval, reason, limit, done) {
         async.waterfall([
             async.apply(db.incrObjectField, 'global', nextAwardId),
             function (id, next) {
@@ -20,14 +20,28 @@
                     if (error) {
                         return next(error);
                     }
+                    //If automated, add on db.
+                    if(type) {
+                        db.sortedSetAdd(namespace+":type:"+type,  id, id, function (err) {
+                            if (err) {
+                                return next(error);
+                            }
+                        }); 
+                    } 
                     next(null, id);
+                  
                 });
             }, function (id, next) {
                 var awardModel = {
                     aid  : id,
                     name : name,
                     desc : description,
-                    image: image
+                    image: image,
+                    type : type, 
+                    cond : condition,
+                    condval: condval,
+                    reason : reason,
+                    limit  : limit
                 };
                 db.setObject(namespace + ':' + id, awardModel, function (error) {
                     if (error) {
@@ -72,9 +86,12 @@
     Database.deleteAward = function (id, done) {
         async.parallel([
             async.apply(db.delete, namespace + ':' + id),
-            async.apply(db.sortedSetRemove, namespace, id)
+            async.apply(db.sortedSetRemove, namespace, id),
+            async.apply(db.sortedSetRemove, namespace+":type:postCnt", id),
+            async.apply(db.sortedSetRemove, namespace+":type:rep", id)
         ], done);
     };
+    
 
     Database.editAward = function (id, update, done) {
         async.waterfall([
@@ -83,13 +100,27 @@
                 if (!award) {
                     next(new Error('Award can not be found'));
                 }
-
                 db.setObject(namespace + ':' + id, update, function (error) {
                     if (error) {
                         return next(error);
                     }
-
+                    //Check if automation updated.
+                    if (award.type !== update.type) {
+                        db.sortedSetRemove(namespace+":type:"+award.type, id, function(err) {
+                            if(err) {
+                                return next(err);
+                            }
+                        });
+                        if (update.type) {
+                            db.sortedSetAdd(namespace+":type:"+update.type, id, id, function (err) {
+                                if (err) {
+                                    return next(err);
+                                }
+                            });
+                        }  
+                    }
                     next(null, objectAssign(award, update));
+           
                 });
             }
         ], done);
@@ -143,7 +174,21 @@
             }
         ], done);
     };
-
+    
+     Database.getAllAwardsByType = function (type, done) {
+        async.waterfall([
+            async.apply(db.getSortedSetRange, namespace + ":type:" + type, 0, -1),
+            function (ids, next) {
+                if (!ids.length) {
+                    return next(null, ids);
+                }
+                db.getObjects(ids.map(function (id) {
+                    return namespace + ':' + id;
+                }), next);
+            }
+        ], done);
+    };
+    
     Database.getAward = function (aid, done) {
         db.getObject(namespace + ':' + aid, done);
     };
@@ -165,5 +210,5 @@
             return namespace + ':grant:' + gid;
         }), done);
     };
-
+    
 })(module.exports);

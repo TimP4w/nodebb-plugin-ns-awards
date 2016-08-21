@@ -5,12 +5,12 @@
         multer     = require('multer'),
         path       = require('path'),
         shortId    = require('shortid'),
-
         controller = require('./controller'),
         sockets    = require('./sockets'),
         filters    = require('./filters'),
         settings   = require('./settings'),
-        uploads    = require('./uploads');
+        uploads    = require('./uploads'),
+        actions    = require('./actions');
 
     //NodeBB list of Hooks: https://github.com/NodeBB/NodeBB/wiki/Hooks
     Plugin.hooks = {
@@ -76,7 +76,15 @@
             userDelete: function (params, callback) {
                 controller.deleteUserGrants(params.uid, callback);
             }
+        },
+        actions: {
+            onPost: function (params, callback) {
+                actions.onPost(params, callback);
+            },
+            onUpvote: function (params, callback) {
+                actions.onUpvote(params, callback);
+            }
         }
     };
-
+     
 })(module.exports);

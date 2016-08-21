@@ -32,12 +32,17 @@ module.exports = {
         });
     },
 
-    createAward: function (name, description, imageFileId) {
+    createAward: function (name, description, imageFileId, type, condition, condval, reason, limit) {
         AppDispatcher.dispatch({
             actionType: Constants.EVENT_CREATE_AWARD,
             name      : name,
             desc      : description,
-            fileId    : imageFileId
+            fileId    : imageFileId,
+            type      : type,
+            cond      : condition,
+            condval   : condval,
+            reason    : reason,
+            limit     : limit
         });
     },
 
@@ -58,13 +63,18 @@ module.exports = {
         });
     },
 
-    editAward: function (aid, name, desc, file) {
+    editAward: function (aid, name, desc, file, type, cond, condval, reason, limit) {
         AppDispatcher.dispatch({
             actionType: Constants.EVENT_EDIT_AWARD,
             id        : aid,
             name      : name,
             desc      : desc,
-            file      : file
+            file      : file,
+            type      : type,
+            cond      : cond,
+            condval   : condval,
+            reason    : reason,
+            limit     : limit 
         });
     },
 

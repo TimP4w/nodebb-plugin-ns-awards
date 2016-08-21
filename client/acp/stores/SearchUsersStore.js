@@ -1,7 +1,7 @@
 var Actions       = require('../actions/Actions'),
     AppDispatcher = require('../dispatcher/AppDispatcher'),
     EventEmitter  = require('events').EventEmitter,
-    assign        = require('react/lib/Object.assign'),
+    assign        = Object.assign,
     Constants     = require('../Constants'),
     socket        = require('socket'),
 

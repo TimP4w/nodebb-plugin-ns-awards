@@ -18,7 +18,6 @@
         helpers: NodeBB.require('./src/controllers/helpers'),
         plugins: NodeBB.require('./src/plugins'),
 
-
         /**
          * List is incomplete
          *

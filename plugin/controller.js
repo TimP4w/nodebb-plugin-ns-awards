@@ -12,6 +12,7 @@
         controller    = require('./controller'),
         constants     = require('./constants'),
         uploads       = require('./uploads'),
+        
 
         nodebb        = require('./nodebb'),
         utils         = nodebb.utils,
@@ -40,16 +41,17 @@
             async.apply(database.getAward, awardId),
             function (award, callback) {
                 notifications.create({
-                    bodyShort: util.format('Congratulations! You have received "%s" award.', award.name),
-                    nid      : 'aid:' + awardId + ':uids:' + recipients.join('-'),
-                    aid      : awardId,
-                    from     : fromUid
+                   bodyShort: util.format('Congratulations! You have received "%s" award.', award.name),
+                   nid      : 'aid:' + awardId + ':uids:' + recipients.join('-'),
+                   from     : fromUid,
+                   aid      : awardId,
+                   path     : "/awards"
                 }, callback);
             },
             function (notification, callback) {
                 if (notification) {
                     notifications.push(notification, recipients, callback);
-                }
+               }
             }
         ], done);
     };
@@ -68,6 +70,7 @@
             }
         ], done);
     };
+    
 
     /**
      * Edit award.
@@ -78,10 +81,15 @@
      * @param upload - optional file descriptor, to get filename, 'uploads' module should be used
      * @param done {function}
      */
-    Controller.editAward = function (aid, name, description, upload, done) {
+    Controller.editAward = function (aid, name, description, upload, type, cond, condval, reason, limit, done) {
         var update = {
-            name: name,
-            desc: description
+            name   : name,
+            desc   : description,
+            type   : type,
+            cond   : cond,
+            condval: condval,
+            reason : reason,
+            limit  : limit
         };
 
         upload = upload || {};
@@ -108,7 +116,8 @@
     Controller.editGrant = function (gid, reason, done) {
         database.editGrant(gid, {reason: reason}, done);
     };
-
+    
+        
     /**
      * Update image. Delete old one if any.
      *
@@ -128,7 +137,7 @@
                 if(uploads.isOnFileSystem(award.image)){
                     fse.remove(uploads.getUploadImagePath(award.image));
                 }
-                next(null,award)
+                next(null,award);
             },
             function (award, next) {
                 if (plugins.hasListeners('filter:uploadImage')) {
@@ -167,13 +176,41 @@
 
                     next(null, {
                         awards     : awards,
-                        breadcrumbs: helpers.buildBreadcrumbs([{text: 'Awards'}])
+                        breadcrumbs: helpers.buildBreadcrumbs([{text: 'Awards'}]),
+                        title      : "Awards"
                     });
                 });
             }
         ], done);
     };
+    
+    Controller.getAllAwardsByType = function (type, done) {
+        async.waterfall([
+            async.apply(database.getAllAwardsByType, type),
+            function (awards, next) {
+                async.map(awards, function (award, next) {
+                    award.picture = award.image;
 
+                    Controller.getAwardRecipients(award.aid, function (error, grants) {
+                        if (error) {
+                           next(error);
+                        }
+
+                        award.grants = grants;
+                        next(null, award);
+                    });
+                }, function (error, awards) {
+                    if (error) {
+                        next(error);
+                    }
+                    next({
+                        awards: awards
+                    });
+                });
+            }
+        ], done);
+    };
+    
     Controller.getAwardRecipients = function (aid, done) {
         async.waterfall([
             async.apply(database.getGrantIdsByAward, aid),
@@ -183,7 +220,7 @@
             },
             function (grants, next) {
                 async.map(grants, function (grant, next) {
-                    user.getUserFields(grant.uid, ['username', 'userslug'], function (error, user) {
+                    user.getUserFields(grant.uid, ['username', 'userslug', 'picture', 'icon'], function (error, user) {
                         if (error) {
                             return next(error);
                         }
@@ -271,6 +308,124 @@
         });
 
     };
+    
+    Controller.checkConditionAndAward = function (cond, uid, done) {
+        switch(cond) {
+            case 'postCnt':
+                controller.checkPostCountCondition(uid, function(done) {
+
+                });
+                break;
+                
+             case 'rep':
+                  controller.checkReputationCondition(uid, function(done) {
+            
+                 })
+                 break;
+             default: 
+                return done(error);
+        }
+    };
+    
+    Controller.checkCondition = function (award, user, done) {
+        switch(award.cond) {
+            case 'equal':
+                if(user.cond == award.condval) {
+                    controller.checkAwardLimitReached (award, function(check) {
+                        if(check) {
+                            done({'users':{user}, 'award':award.aid, 'reason':award.reason});
+                        } else {
+                            done(false);
+                        }
+                    });
+                } else {
+                    done(false);
+                }
+                break;
+             case 'every':
+                if((user.cond % award.condval) == 0) {
+                    controller.checkAwardLimitReached (award, function(check) {
+                        if(check) {
+                            done({'users':{user}, 'award':award.aid, 'reason':award.reason});
+                        } else {
+                            done(false);
+                        }
+                    });
+                } else {
+                    done(false);
+                }
+                break;
+             default:
+                return done(false);
+            
+        }
+    };
+    
+    Controller.checkAwardLimitReached = function (award, done) {
+        async.waterfall([
+            async.apply(database.getGrantIdsByAward, award.aid),
+            function (grants, next) {
+                if(grants.length < award.limit || award.limit == 0) {
+                    next(true);
+                } else {
+                    next(false);
+                }
+            }
+        ], done);
+    };
+    
+    Controller.checkPostCountCondition = function (uid, done) {    
+        async.waterfall([
+            async.apply(database.getAllAwardsByType, 'postCnt'),
+            function (awards, next) {
+                 user.getUserFields(uid, ['postcount'], function (error, user) {
+                     if(error) {
+                         next(error);
+                     }
+                         next(null, awards, user);
+                 });
+            },
+            function (awards, user, next) {
+                async.map(awards, function(award) {
+                    user.cond = user.postcount;
+                    controller.checkCondition(award, user, function (payload) {
+                        if(payload) {
+                            controller.awardUsers(payload, 1); 
+                        } else {
+                            return next(false);
+                        }
+                    });
+                }, next);
+            }
+        ], done);
+    };
+                             
+    
+    Controller.checkReputationCondition = function (data, done) {
+        async.waterfall([
+            async.apply(database.getAllAwardsByType, 'rep'),
+            function (awards, next) {
+                 user.getUserFields(uid, ['reputation'], function (error, user) {
+                     if(error) {
+                         next(error);
+                     }
+                         next(null, awards, user);
+                 });
+            },
+            function (awards, user, next) {
+                async.map(awards, function(award) {
+                    user.cond = user.reputation;
+                    controller.checkCondition(award, user, function (payload) {
+                        if(payload) {
+                            controller.awardUsers(payload, 1); 
+                        } else {
+                            return next(false);
+                        }
+                    });
+                }, next);
+            }
+        ], done);
+    };
 
     function getValidFields(fields, object) {
         var shallowCopy = {};
@@ -281,6 +436,6 @@
         }
         return shallowCopy;
     }
-
     
+
 })(module.exports);
