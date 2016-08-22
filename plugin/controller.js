@@ -78,6 +78,11 @@
      * @param aid - award identifier
      * @param name - award name
      * @param description - award description
+     * @param type - automatic award type (postCnt, rep, etc.)*
+     * @param cond - automatic award condition*
+     * @param condval - automatic award condition value that has to be met for rewarding*
+     * @param reason -  automatic award reason of the grant*
+     *  *if one of those is set, you need to set the others too!
      * @param upload - optional file descriptor, to get filename, 'uploads' module should be used
      * @param done {function}
      */
@@ -183,34 +188,7 @@
             }
         ], done);
     };
-    
-    Controller.getAllAwardsByType = function (type, done) {
-        async.waterfall([
-            async.apply(database.getAllAwardsByType, type),
-            function (awards, next) {
-                async.map(awards, function (award, next) {
-                    award.picture = award.image;
-
-                    Controller.getAwardRecipients(award.aid, function (error, grants) {
-                        if (error) {
-                           next(error);
-                        }
-
-                        award.grants = grants;
-                        next(null, award);
-                    });
-                }, function (error, awards) {
-                    if (error) {
-                        next(error);
-                    }
-                    next({
-                        awards: awards
-                    });
-                });
-            }
-        ], done);
-    };
-    
+        
     Controller.getAwardRecipients = function (aid, done) {
         async.waterfall([
             async.apply(database.getGrantIdsByAward, aid),
@@ -309,24 +287,39 @@
 
     };
     
-    Controller.checkConditionAndAward = function (cond, uid, done) {
-        switch(cond) {
+    
+     /**
+     * Initiate the process of checking if an award can be granted to the uid
+     *
+     * @param type {string} award type identifier
+     * @param uid {int} user id
+     * @param done {function} returns true if at least an award was granted
+     */
+    Controller.autoAward = function (type, uid, done) {
+        switch(type) {
             case 'postCnt':
-                controller.checkPostCountCondition(uid, function(done) {
-
+                controller.checkPostCountType(uid, function(finish) {
+                   done(finish);
                 });
                 break;
                 
              case 'rep':
-                  controller.checkReputationCondition(uid, function(done) {
-            
-                 })
+                  controller.checkReputationType(uid, function(finish) {
+                    done(finish);
+                 });
                  break;
              default: 
-                return done(error);
+                done;
         }
     };
     
+     /**
+     * Check for conditions
+     *
+     * @param cond {string} award condition
+     * @param user {object} the user to check if meets condition
+     * @param done {function} returns payload if can be awarded
+     */
     Controller.checkCondition = function (award, user, done) {
         switch(award.cond) {
             case 'equal':
@@ -334,47 +327,50 @@
                     controller.checkAwardLimitReached (award, function(check) {
                         if(check) {
                             done({'users':{user}, 'award':award.aid, 'reason':award.reason});
-                        } else {
-                            done(false);
-                        }
+                        } 
                     });
-                } else {
-                    done(false);
-                }
+                } 
                 break;
              case 'every':
                 if((user.cond % award.condval) == 0) {
                     controller.checkAwardLimitReached (award, function(check) {
                         if(check) {
                             done({'users':{user}, 'award':award.aid, 'reason':award.reason});
-                        } else {
-                            done(false);
-                        }
+                        } 
                     });
-                } else {
-                    done(false);
-                }
+                } 
                 break;
              default:
-                return done(false);
+                done;
             
         }
     };
     
+    /**
+     * Check if maximum number of award were already granted
+     *
+     * @param award {object} the award to check
+     * @param done {function} returns true if limit not reached
+     */
     Controller.checkAwardLimitReached = function (award, done) {
         async.waterfall([
             async.apply(database.getGrantIdsByAward, award.aid),
             function (grants, next) {
                 if(grants.length < award.limit || award.limit == 0) {
                     next(true);
-                } else {
-                    next(false);
                 }
             }
         ], done);
     };
     
-    Controller.checkPostCountCondition = function (uid, done) {    
+    
+     /**
+     * Check if an award of type PostCount can be granted
+     *
+     * @param uid {integer} uid of the user to check
+     * @param done {function} returns true if an award was granted
+     */
+    Controller.checkPostCountType = function (uid, done) {
         async.waterfall([
             async.apply(database.getAllAwardsByType, 'postCnt'),
             function (awards, next) {
@@ -390,9 +386,9 @@
                     user.cond = user.postcount;
                     controller.checkCondition(award, user, function (payload) {
                         if(payload) {
+                            //For now the uid is 1, should this be in the settings?             
                             controller.awardUsers(payload, 1); 
-                        } else {
-                            return next(false);
+                            next(true);
                         }
                     });
                 }, next);
@@ -400,8 +396,13 @@
         ], done);
     };
                              
-    
-    Controller.checkReputationCondition = function (data, done) {
+     /**
+     * Check if an award of type rep (Reputation) can be granted
+     *
+     * @param uid {integer} uid of the user to check
+     * @param done {function} returns true if an award was granted
+     */
+    Controller.checkReputationType = function (uid, done) {
         async.waterfall([
             async.apply(database.getAllAwardsByType, 'rep'),
             function (awards, next) {
@@ -417,10 +418,9 @@
                     user.cond = user.reputation;
                     controller.checkCondition(award, user, function (payload) {
                         if(payload) {
-                            controller.awardUsers(payload, 1); 
-                        } else {
-                            return next(false);
-                        }
+                            controller.awardUsers(payload, 1);
+                            next(true); 
+                        } 
                     });
                 }, next);
             }

@@ -4,23 +4,30 @@
     var controller    = require('./controller'),
         nodebb        = require('./nodebb'),
         user          = nodebb.user;
-
+        
      /**
-     * Check Post to see if automatic award is available.
+     * Listen to Post Save Hook and check for award
      *
-     * @param data - 
-     * @param done {function}
+     * @param data
+     *
      */
     Action.onPost = function (data) {
-        controller.checkConditionAndAward('postCnt', data.uid, function(cb) {
+       
+        controller.autoAward('postCnt', data.uid, function(cb) {
 
-        })
+        });
     };
- 
+    
+     /**
+     * Listen to upVote Hook and check for award
+     *
+     * @param data ({ pid: 318, uid: 3, owner: 1, current: 'unvote' })
+     * 
+     */
     Action.onUpvote = function (data) {
-       controller.checkConditionAndAward('rep', data.uid, function(cb) {
+       controller.autoAward('rep', data.owner, function(awarded) {
 
-        }) 
+        }); 
     }
  
 })(module.exports);
