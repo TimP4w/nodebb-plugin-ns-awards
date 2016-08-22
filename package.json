@@ -21,9 +21,9 @@
   "author": "TimP4w",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/digitalLumberjack/nodebb-plugin-ns-awards/issues"
+    "url": "https://github.com/TimP4w/nodebb-plugin-ns-awards/issues"
   },
-  "homepage": "https://github.com/digitalLumberjack/nodebb-plugin-ns-awards#readme",
+  "homepage": "https://github.com/TimP4w/nodebb-plugin-ns-awards#readme",
   "dependencies": {
     "async": "^1.5.2",
     "fs-extra": "^0.26.5",
