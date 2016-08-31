@@ -28,6 +28,7 @@ var AwardsListItemView = React.createClass({
             condval      : this.props.award.condval,
             reason       : this.props.award.reason,
             limit        : this.props.award.limit,
+            userLimit    : this.props.award.userLimit,
             autoAwardForm: !!this.props.award.type
         }
     },
@@ -79,6 +80,14 @@ var AwardsListItemView = React.createClass({
                                     value={self.state.limit}
                                     onChange={self._limitDidChange}/>
                             </div>
+                            <div>
+                            <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Enter User Limit"
+                                    value={self.state.userLimit}
+                                    onChange={self._userLimitDidChange}/>
+                            </div>
                       </div>
                 );
             } else {
@@ -114,7 +123,7 @@ var AwardsListItemView = React.createClass({
                     <dl>
                         <dt>{self.props.award.name}</dt>
                         <dd>{self.props.award.desc}</dd>
-                        <dt>{ !self.props.award.type ? "Only manually" : "Auto award on " + self.props.award.type + " condition: " + self.props.award.cond + " " + self.props.award.condval + " Reason: " + self.props.award.reason + " Limit: " + self.props.award.limit}</dt>
+                        <dt>{ !self.props.award.type ? "Only manually" : "Auto award on " + self.props.award.type + " condition: " + self.props.award.cond + " " + self.props.award.condval + " Reason: " + self.props.award.reason + " Limit: " + self.props.award.limit + " User Limit: " + self.props.award.userLimit}</dt>
                     </dl>
                 );
             }
@@ -192,11 +201,12 @@ var AwardsListItemView = React.createClass({
         if(this.state.autoAwardForm) {
             this.setState({
                 autoAwardForm: !this.state.autoAwardForm,
-                type: '',
-                cond: '',
-                condval: '',
-                reason: '',
-                limit: ''  
+                type         : '',
+                cond         : '',
+                condval      : '',
+                reason       : '',
+                limit        : '',
+                userLimit    : ''  
             });
         } else {
             this.setState({
@@ -262,6 +272,12 @@ var AwardsListItemView = React.createClass({
     
     _limitDidChange: function (e) {
         this.setState({
+            userLimit: e.currentTarget.value
+        });
+    },
+    
+    _userLimitDidChange: function (e) {
+        this.setState({
             limit: e.currentTarget.value
         });
     },
@@ -279,6 +295,7 @@ var AwardsListItemView = React.createClass({
         });
     },
 
+    //TODO add userLimit
     _isValid: function () {
         return (this.state.name && this.state.name !== this.props.award.name)
             || (this.state.desc && this.state.desc !== this.props.award.desc)
@@ -301,7 +318,7 @@ var AwardsListItemView = React.createClass({
 
     _save: function () {
         if (this._isValid()) {
-            this.props.itemWillSave(this.state.name, this.state.desc, this.state.fileServer, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit);
+            this.props.itemWillSave(this.state.name, this.state.desc, this.state.fileServer, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit, this.state.userLimit);
         }
     }
 });

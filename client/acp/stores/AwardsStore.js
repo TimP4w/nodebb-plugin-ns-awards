@@ -35,14 +35,15 @@ AppDispatcher.register(function (action) {
     switch (action.actionType) {
         case Constants.EVENT_CREATE_AWARD:
             socket.emit(API.CREATE_AWARD, {
-                name   : action.name,
-                desc   : action.desc,
-                fileId : action.fileId,
-                type   : action.type,
-                cond   : action.cond,
-                condval: action.condval,
-                reason : action.reason,
-                limit  : action.limit
+                name     : action.name,
+                desc     : action.desc,
+                fileId   : action.fileId,
+                type     : action.type,
+                cond     : action.cond,
+                condval  : action.condval,
+                reason   : action.reason,
+                limit    : action.limit,
+                userLimit: action.userLimit
             }, function (error, award) {
                 //Optimistic Award Create
                 _awards.push(award);
@@ -63,15 +64,16 @@ AppDispatcher.register(function (action) {
             break;
         case Constants.EVENT_EDIT_AWARD:
             socket.emit(API.EDIT_AWARD, {
-                id     : action.id,
-                name   : action.name,
-                desc   : action.desc,
-                image  : action.file,
-                type   : action.type,
-                cond   : action.cond,
-                condval: action.condval,
-                reason : action.reason,
-                limit  : action.limit
+                id       : action.id,
+                name     : action.name,
+                desc     : action.desc,
+                image    : action.file,
+                type     : action.type,
+                cond     : action.cond,
+                condval  : action.condval,
+                reason   : action.reason,
+                limit    : action.limit,
+                userLimit: action.userLimit
             }, function (error, award) {
                 if (error) {
                     return console.error(error);

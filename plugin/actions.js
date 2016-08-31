@@ -2,7 +2,9 @@
     'use strict';
 
     var controller    = require('./controller'),
+        database      = require('./database'),
         nodebb        = require('./nodebb'),
+        async         = require('async'),
         user          = nodebb.user;
         
      /**
@@ -13,7 +15,7 @@
      */
     Action.onPost = function (data) {
        
-        controller.autoAward('postCnt', data.uid, function(cb) {
+        controller.autoAward('postCnt', data.uid, function(awarded) {
 
         });
     };
@@ -26,8 +28,9 @@
      */
     Action.onUpvote = function (data) {
        controller.autoAward('rep', data.owner, function(awarded) {
-
-        }); 
-    }
+            
+        });
+    };                   
+    
  
 })(module.exports);

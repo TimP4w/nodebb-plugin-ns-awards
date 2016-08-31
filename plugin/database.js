@@ -11,7 +11,7 @@
         nextAwardId  = constants.GLOBAL_AWARD_COUNTER,
         nextGrantId  = constants.GLOBAL_GRANT_COUNTER;
 
-    Database.createAward = function (name, description, image, type, condition, condval, reason, limit, done) {
+    Database.createAward = function (name, description, image, type, condition, condval, reason, limit, userLimit, done) {
         async.waterfall([
             async.apply(db.incrObjectField, 'global', nextAwardId),
             function (id, next) {
@@ -33,15 +33,16 @@
                 });
             }, function (id, next) {
                 var awardModel = {
-                    aid  : id,
-                    name : name,
-                    desc : description,
-                    image: image,
-                    type : type, 
-                    cond : condition,
-                    condval: condval,
-                    reason : reason,
-                    limit  : limit
+                    aid      : id,
+                    name     : name,
+                    desc     : description,
+                    image    : image,
+                    type     : type, 
+                    cond     : condition,
+                    condval  : condval,
+                    reason   : reason,
+                    limit    : limit,
+                    userLimit: userLimit
                 };
                 db.setObject(namespace + ':' + id, awardModel, function (error) {
                     if (error) {
@@ -72,7 +73,8 @@
                 async.parallel([
                     async.apply(db.sortedSetAdd, namespace + ':award:' + aid, createTime, gid),
                     async.apply(db.sortedSetAdd, namespace + ':user:' + uid, createTime, gid),
-                    async.apply(db.setObject, namespace + ':grant:' + gid, grant)
+                    async.apply(db.setObject, namespace + ':grant:' + gid, grant),
+                    async.apply(db.sortedSetAdd, namespace + ':aid:' + aid + ':uid:' + uid, createTime, gid)
                 ], function (error) {
                     if (error) {
                         return next(error);
@@ -156,7 +158,9 @@
             async.parallel([
                 async.apply(db.delete, namespace + ':grant:' + grant.gid),
                 async.apply(db.sortedSetRemove, namespace + ':award:' + grant.aid, gid),
-                async.apply(db.sortedSetRemove, namespace + ':user:' + grant.uid, gid)
+                async.apply(db.sortedSetRemove, namespace + ':user:' + grant.uid, gid),
+                async.apply(db.sortedSetRemove, namespace + ':aid:' + grant.aid + ':uid:' + grant.uid, gid)
+
             ], done);
         });
     };
@@ -204,6 +208,10 @@
     Database.getGrantIdsByUser = function (uid, limit, done) {
         db.getSortedSetRevRange(namespace + ':user:' + uid, 0, limit, done);
     };
+    
+    Database.getGrantIdsByUserAndAward = function(uid, aid, done) {
+        db.getSortedSetRevRange(namespace + ':aid:' + aid + ':uid:' + uid, -0, -1, done);
+    }
 
     Database.getGrantsByIds = function (ids, done) {
         db.getObjects(ids.map(function (gid, index) {

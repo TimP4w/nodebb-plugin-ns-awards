@@ -13,7 +13,6 @@
         constants     = require('./constants'),
         uploads       = require('./uploads'),
         
-
         nodebb        = require('./nodebb'),
         utils         = nodebb.utils,
         helpers       = nodebb.helpers,
@@ -71,7 +70,6 @@
         ], done);
     };
     
-
     /**
      * Edit award.
      *
@@ -86,15 +84,16 @@
      * @param upload - optional file descriptor, to get filename, 'uploads' module should be used
      * @param done {function}
      */
-    Controller.editAward = function (aid, name, description, upload, type, cond, condval, reason, limit, done) {
+    Controller.editAward = function (aid, name, description, upload, type, cond, condval, reason, limit, userLimit, done) {
         var update = {
-            name   : name,
-            desc   : description,
-            type   : type,
-            cond   : cond,
-            condval: condval,
-            reason : reason,
-            limit  : limit
+            name     : name,
+            desc     : description,
+            type     : type,
+            cond     : cond,
+            condval  : condval,
+            reason   : reason,
+            limit    : limit,
+            userLimit: userLimit
         };
 
         upload = upload || {};
@@ -275,7 +274,7 @@
             }
         ], done);
     };
-
+    
     Controller.saveValidSettings = function (data, done) {
         settings.get(function (error, values) {
             if (error) {
@@ -301,8 +300,7 @@
                 controller.checkPostCountType(uid, function(finish) {
                    done(finish);
                 });
-                break;
-                
+                break;               
              case 'rep':
                   controller.checkReputationType(uid, function(finish) {
                     done(finish);
@@ -324,7 +322,7 @@
         switch(award.cond) {
             case 'equal':
                 if(user.cond == award.condval) {
-                    controller.checkAwardLimitReached (award, function(check) {
+                    controller.checkAwardLimitReached (award, user.uid, function(check) {
                         if(check) {
                             done({'users':{user}, 'award':award.aid, 'reason':award.reason});
                         } 
@@ -333,7 +331,7 @@
                 break;
              case 'every':
                 if((user.cond % award.condval) == 0) {
-                    controller.checkAwardLimitReached (award, function(check) {
+                    controller.checkAwardLimitReached (award, user.uid, function(check) {
                         if(check) {
                             done({'users':{user}, 'award':award.aid, 'reason':award.reason});
                         } 
@@ -352,17 +350,42 @@
      * @param award {object} the award to check
      * @param done {function} returns true if limit not reached
      */
-    Controller.checkAwardLimitReached = function (award, done) {
+    Controller.checkAwardLimitReached = function (award, uid, done) {
         async.waterfall([
             async.apply(database.getGrantIdsByAward, award.aid),
             function (grants, next) {
                 if(grants.length < award.limit || award.limit == 0) {
-                    next(true);
+                   controller.sameAwardCount(uid, award.aid, function(count) {
+                       if(count < award.userLimit || award.userLimit == 0) {
+                           next(true)
+                        };
+                   });
                 }
             }
         ], done);
     };
     
+    /**
+     * Check how many award of the same type have been granted to an user
+     *
+     * 
+     * @param uid {object} uid of the user to check
+     * @param aid {object} aid of the award to check
+     * @param done {function} returns the count of the same award granted to the user
+     */
+    Controller.sameAwardCount = function (uid, aid, done) {
+        async.waterfall([
+            async.apply(database.getGrantIdsByUserAndAward, uid, aid),
+            function (grantIds, next) {
+                if (!grantIds) {
+                    console.log(grandIds);
+                    return next(null, []);
+                }
+                next(grantIds.length);
+            }
+        ], done);
+    };
+
     
      /**
      * Check if an award of type PostCount can be granted

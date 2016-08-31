@@ -23,6 +23,7 @@ var AwardCreator = React.createClass({
             reason   : '',
             type     : '',
             limit    : '',
+            userLimit: '',
             autoAward: false
         };
     },
@@ -72,6 +73,12 @@ var AwardCreator = React.createClass({
                 <input
                     type="text" className="form-control" id="awardLimit" placeholder="Enter a number (0 for infinite)"
                     valueLink={this.linkState('limit')}/>
+            </div>
+             <div className="form-group">
+                <label htmlFor="userLimit">Limit of awards per single user</label>
+                <input
+                    type="text" className="form-control" id="userLimit" placeholder="Enter a number (0 for infinite)"
+                    valueLink={this.linkState('userLimit')}/>
             </div>
             
         </div>;
@@ -150,7 +157,7 @@ var AwardCreator = React.createClass({
     },
 
     _createAward: function () {
-        Actions.createAward(this.state.name, this.state.desc, this.state.fileServer.id, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit);
+        Actions.createAward(this.state.name, this.state.desc, this.state.fileServer.id, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit, this.state.userLimit);
         this._cancelAwardForm();
     },
 
@@ -162,7 +169,7 @@ var AwardCreator = React.createClass({
     
     _isValid: function () {
         if (this.state.autoAward) {
-            return !!this.state.name && !!this.state.desc && !!this.state.fileServer && !!this.state.type && !!this.state.cond && !!this.state.condval && !!this.state.reason && !!this.state.limit;  
+            return !!this.state.name && !!this.state.desc && !!this.state.fileServer && !!this.state.type && !!this.state.cond && !!this.state.condval && !!this.state.reason && !!this.state.limit && !!this.state.userLimit;  
         } else {
             return !!this.state.name && !!this.state.desc && !!this.state.fileServer;
         }

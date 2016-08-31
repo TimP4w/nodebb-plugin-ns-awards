@@ -465,6 +465,22 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],3:[function(require,module,exports){
+define('admin/plugins/awards', [], function () {
+    return {
+        init: function () {
+            var React     = require('react'),
+                ReactDom  = require('react-dom'),
+                AwardsApp = require('./components/AwardsApp.react');
+
+            ReactDom.render(
+                React.createElement(AwardsApp, null),
+                document.getElementsByClassName('manage-awards')[0]
+            );
+        }
+    };
+});
+
+},{"./components/AwardsApp.react":10,"react":202,"react-dom":40}],4:[function(require,module,exports){
 var keyMirror = require('keymirror');
 
 module.exports = keyMirror({
@@ -502,7 +518,7 @@ module.exports = keyMirror({
     SECTION_SETTINGS: null
 });
 
-},{"keymirror":30}],4:[function(require,module,exports){
+},{"keymirror":30}],5:[function(require,module,exports){
 var AppDispatcher = require('../dispatcher/AppDispatcher'),
     Constants     = require('../Constants');
 
@@ -537,7 +553,7 @@ module.exports = {
         });
     },
 
-    createAward: function (name, description, imageFileId, type, condition, condval, reason, limit) {
+    createAward: function (name, description, imageFileId, type, condition, condval, reason, limit, userLimit) {
         AppDispatcher.dispatch({
             actionType: Constants.EVENT_CREATE_AWARD,
             name      : name,
@@ -547,7 +563,8 @@ module.exports = {
             cond      : condition,
             condval   : condval,
             reason    : reason,
-            limit     : limit
+            limit     : limit,
+            userLimit : userLimit
         });
     },
 
@@ -579,7 +596,8 @@ module.exports = {
             cond      : cond,
             condval   : condval,
             reason    : reason,
-            limit     : limit 
+            limit     : limit ,
+            userLimit : userLimit
         });
     },
 
@@ -731,7 +749,7 @@ module.exports = {
     }
 };
 
-},{"../Constants":3,"../dispatcher/AppDispatcher":23}],5:[function(require,module,exports){
+},{"../Constants":4,"../dispatcher/AppDispatcher":24}],6:[function(require,module,exports){
 var React          = require('react'),
     ReactPropTypes = React.PropTypes,
     classNames     = require('classnames'),
@@ -882,7 +900,7 @@ var Autocomplete = React.createClass({displayName: "Autocomplete",
 
 module.exports = Autocomplete;
 
-},{"classnames":25,"lodash/function/debounce":32,"react":202}],6:[function(require,module,exports){
+},{"classnames":25,"lodash/function/debounce":32,"react":202}],7:[function(require,module,exports){
 var classNames     = require('classnames'),
     React          = require('react'),
     ReactPropTypes = React.PropTypes;
@@ -912,7 +930,7 @@ var UserItemView = React.createClass({displayName: "UserItemView",
 
 module.exports = UserItemView;
 
-},{"classnames":25,"react":202}],7:[function(require,module,exports){
+},{"classnames":25,"react":202}],8:[function(require,module,exports){
 var React            = require('react'),
     LinkedStateMixin = require('react/lib/LinkedStateMixin'),
 
@@ -938,6 +956,7 @@ var AwardCreator = React.createClass({displayName: "AwardCreator",
             reason   : '',
             type     : '',
             limit    : '',
+            userLimit: '',
             autoAward: false
         };
     },
@@ -987,6 +1006,12 @@ var AwardCreator = React.createClass({displayName: "AwardCreator",
                 React.createElement("input", {
                     type: "text", className: "form-control", id: "awardLimit", placeholder: "Enter a number (0 for infinite)", 
                     valueLink: this.linkState('limit')})
+            ), 
+             React.createElement("div", {className: "form-group"}, 
+                React.createElement("label", {htmlFor: "userLimit"}, "Limit of awards per single user"), 
+                React.createElement("input", {
+                    type: "text", className: "form-control", id: "userLimit", placeholder: "Enter a number (0 for infinite)", 
+                    valueLink: this.linkState('userLimit')})
             )
             
         );
@@ -1065,7 +1090,7 @@ var AwardCreator = React.createClass({displayName: "AwardCreator",
     },
 
     _createAward: function () {
-        Actions.createAward(this.state.name, this.state.desc, this.state.fileServer.id, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit);
+        Actions.createAward(this.state.name, this.state.desc, this.state.fileServer.id, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit, this.state.userLimit);
         this._cancelAwardForm();
     },
 
@@ -1077,7 +1102,7 @@ var AwardCreator = React.createClass({displayName: "AwardCreator",
     
     _isValid: function () {
         if (this.state.autoAward) {
-            return !!this.state.name && !!this.state.desc && !!this.state.fileServer && !!this.state.type && !!this.state.cond && !!this.state.condval && !!this.state.reason && !!this.state.limit;  
+            return !!this.state.name && !!this.state.desc && !!this.state.fileServer && !!this.state.type && !!this.state.cond && !!this.state.condval && !!this.state.reason && !!this.state.limit && !!this.state.userLimit;  
         } else {
             return !!this.state.name && !!this.state.desc && !!this.state.fileServer;
         }
@@ -1109,7 +1134,7 @@ var AwardCreator = React.createClass({displayName: "AwardCreator",
 
 module.exports = AwardCreator;
 
-},{"../actions/Actions":4,"../utils/PathUtils":209,"./ImageDrop.react":14,"./PanelControls.react":17,"./PromptView.react":18,"react":202,"react/lib/LinkedStateMixin":64}],8:[function(require,module,exports){
+},{"../actions/Actions":5,"../utils/PathUtils":209,"./ImageDrop.react":15,"./PanelControls.react":18,"./PromptView.react":19,"react":202,"react/lib/LinkedStateMixin":64}],9:[function(require,module,exports){
 var Actions       = require('../actions/Actions'),
     assign        = Object.assign,
     AwardsStore   = require('../stores/AwardsStore'),
@@ -1210,7 +1235,7 @@ var AwardSelector = React.createClass({displayName: "AwardSelector",
 
 module.exports = AwardSelector;
 
-},{"../Constants":3,"../actions/Actions":4,"../stores/AwardsStore":203,"../stores/EditUserStore":204,"react":202}],9:[function(require,module,exports){
+},{"../Constants":4,"../actions/Actions":5,"../stores/AwardsStore":203,"../stores/EditUserStore":204,"react":202}],10:[function(require,module,exports){
 var React            = require('react'),
     AwardCreator     = require('./AwardCreator.react'),
     TabManager       = require('./TabManager.react'),
@@ -1232,7 +1257,7 @@ var AwardsApp = React.createClass({displayName: "AwardsApp",
 });
 module.exports = AwardsApp;
 
-},{"../stores/UsersStore":208,"./AwardCreator.react":7,"./TabManager.react":20,"react":202}],10:[function(require,module,exports){
+},{"../stores/UsersStore":208,"./AwardCreator.react":8,"./TabManager.react":21,"react":202}],11:[function(require,module,exports){
 (function (global){
 var React          = require('react'),
     bootbox        = (typeof window !== "undefined" ? window['bootbox'] : typeof global !== "undefined" ? global['bootbox'] : null),
@@ -1264,6 +1289,7 @@ var AwardsListItemView = React.createClass({displayName: "AwardsListItemView",
             condval      : this.props.award.condval,
             reason       : this.props.award.reason,
             limit        : this.props.award.limit,
+            userLimit    : this.props.award.userLimit,
             autoAwardForm: !!this.props.award.type
         }
     },
@@ -1314,6 +1340,14 @@ var AwardsListItemView = React.createClass({displayName: "AwardsListItemView",
                                     placeholder: "Enter Limit", 
                                     value: self.state.limit, 
                                     onChange: self._limitDidChange})
+                            ), 
+                            React.createElement("div", null, 
+                            React.createElement("input", {
+                                    type: "text", 
+                                    className: "form-control", 
+                                    placeholder: "Enter User Limit", 
+                                    value: self.state.userLimit, 
+                                    onChange: self._userLimitDidChange})
                             )
                       )
                 );
@@ -1350,7 +1384,7 @@ var AwardsListItemView = React.createClass({displayName: "AwardsListItemView",
                     React.createElement("dl", null, 
                         React.createElement("dt", null, self.props.award.name), 
                         React.createElement("dd", null, self.props.award.desc), 
-                        React.createElement("dt", null,  !self.props.award.type ? "Only manually" : "Auto award on " + self.props.award.type + " condition: " + self.props.award.cond + " " + self.props.award.condval + " Reason: " + self.props.award.reason + " Limit: " + self.props.award.limit)
+                        React.createElement("dt", null,  !self.props.award.type ? "Only manually" : "Auto award on " + self.props.award.type + " condition: " + self.props.award.cond + " " + self.props.award.condval + " Reason: " + self.props.award.reason + " Limit: " + self.props.award.limit + " User Limit: " + self.props.award.userLimit)
                     )
                 );
             }
@@ -1428,11 +1462,12 @@ var AwardsListItemView = React.createClass({displayName: "AwardsListItemView",
         if(this.state.autoAwardForm) {
             this.setState({
                 autoAwardForm: !this.state.autoAwardForm,
-                type: '',
-                cond: '',
-                condval: '',
-                reason: '',
-                limit: ''  
+                type         : '',
+                cond         : '',
+                condval      : '',
+                reason       : '',
+                limit        : '',
+                userLimit    : ''  
             });
         } else {
             this.setState({
@@ -1498,6 +1533,12 @@ var AwardsListItemView = React.createClass({displayName: "AwardsListItemView",
     
     _limitDidChange: function (e) {
         this.setState({
+            userLimit: e.currentTarget.value
+        });
+    },
+    
+    _userLimitDidChange: function (e) {
+        this.setState({
             limit: e.currentTarget.value
         });
     },
@@ -1515,6 +1556,7 @@ var AwardsListItemView = React.createClass({displayName: "AwardsListItemView",
         });
     },
 
+    //TODO add userLimit
     _isValid: function () {
         return (this.state.name && this.state.name !== this.props.award.name)
             || (this.state.desc && this.state.desc !== this.props.award.desc)
@@ -1537,7 +1579,7 @@ var AwardsListItemView = React.createClass({displayName: "AwardsListItemView",
 
     _save: function () {
         if (this._isValid()) {
-            this.props.itemWillSave(this.state.name, this.state.desc, this.state.fileServer, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit);
+            this.props.itemWillSave(this.state.name, this.state.desc, this.state.fileServer, this.state.type, this.state.cond, this.state.condval, this.state.reason, this.state.limit, this.state.userLimit);
         }
     }
 });
@@ -1545,7 +1587,7 @@ var AwardsListItemView = React.createClass({displayName: "AwardsListItemView",
 module.exports = AwardsListItemView;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../actions/Actions":4,"../utils/PathUtils":209,"./ImageUpdate.react":15,"classnames":25,"lodash/utility/noop":38,"react":202}],11:[function(require,module,exports){
+},{"../actions/Actions":5,"../utils/PathUtils":209,"./ImageUpdate.react":16,"classnames":25,"lodash/utility/noop":38,"react":202}],12:[function(require,module,exports){
 var React              = require('react'),
     AwardsListItemView = require('./AwardsListItemView.react'),
     AwardsStore        = require('../stores/AwardsStore'),
@@ -1616,14 +1658,14 @@ var AwardsListView = React.createClass({displayName: "AwardsListView",
         })
     },
 
-    _itemWillSave: function (index, aid, name, description, file, type, cond, condval, reason, limit) {
-        Actions.editAward(aid, name, description, file, type, cond, condval, reason, limit);
+    _itemWillSave: function (index, aid, name, description, file, type, cond, condval, reason, limit, userLimit) {
+        Actions.editAward(aid, name, description, file, type, cond, condval, reason, limit, userLimit);
     }
 });
 
 module.exports = AwardsListView;
 
-},{"../actions/Actions":4,"../stores/AwardsStore":203,"./AwardsListItemView.react":10,"react":202}],12:[function(require,module,exports){
+},{"../actions/Actions":5,"../stores/AwardsStore":203,"./AwardsListItemView.react":11,"react":202}],13:[function(require,module,exports){
 (function (global){
 var React            = require('react'),
     LinkedStateMixin = require('react/lib/LinkedStateMixin'),
@@ -1711,7 +1753,7 @@ var Donate = React.createClass({displayName: "Donate",
 module.exports = Donate;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../actions/Actions":4,"react":202,"react/lib/LinkedStateMixin":64}],13:[function(require,module,exports){
+},{"../actions/Actions":5,"react":202,"react/lib/LinkedStateMixin":64}],14:[function(require,module,exports){
 var Actions          = require('../actions/Actions'),
     assign           = Object.assign,
     Autocomplete     = require('./Autocomplete.react'),
@@ -1796,7 +1838,7 @@ var EditUser = React.createClass({displayName: "EditUser",
 
 module.exports = EditUser;
 
-},{"../actions/Actions":4,"../stores/EditUserStore":204,"../stores/SearchUsersStore":206,"./Autocomplete.react":5,"./UserItemView.react":22,"react":202}],14:[function(require,module,exports){
+},{"../actions/Actions":5,"../stores/EditUserStore":204,"../stores/SearchUsersStore":206,"./Autocomplete.react":6,"./UserItemView.react":23,"react":202}],15:[function(require,module,exports){
 var React          = require('react'),
     ReactPropTypes = React.PropTypes,
     Actions        = require('../actions/Actions'),
@@ -1883,7 +1925,7 @@ var ImageDrop = React.createClass({displayName: "ImageDrop",
 
 module.exports = ImageDrop;
 
-},{"../actions/Actions":4,"classnames":25,"dropzone":26,"react":202}],15:[function(require,module,exports){
+},{"../actions/Actions":5,"classnames":25,"dropzone":26,"react":202}],16:[function(require,module,exports){
 var React          = require('react'),
     ReactPropTypes = React.PropTypes,
     ImageDrop      = require('./ImageDrop.react'),
@@ -1926,7 +1968,7 @@ var ImageUpdate = React.createClass({displayName: "ImageUpdate",
 
 module.exports = ImageUpdate;
 
-},{"../utils/PathUtils":209,"./ImageDrop.react":14,"classnames":25,"react":202}],16:[function(require,module,exports){
+},{"../utils/PathUtils":209,"./ImageDrop.react":15,"classnames":25,"react":202}],17:[function(require,module,exports){
 var AwardSelector = require('./AwardSelector.react'),
     React         = require('react'),
     EditUser      = require('./EditUser.react');
@@ -1948,7 +1990,7 @@ var Manage = React.createClass({displayName: "Manage",
 
 module.exports = Manage;
 
-},{"./AwardSelector.react":8,"./EditUser.react":13,"react":202}],17:[function(require,module,exports){
+},{"./AwardSelector.react":9,"./EditUser.react":14,"react":202}],18:[function(require,module,exports){
 var React          = require('react'),
     ReactPropTypes = React.PropTypes;
 
@@ -1989,7 +2031,7 @@ var PanelControls = React.createClass({displayName: "PanelControls",
 
 module.exports = PanelControls;
 
-},{"react":202}],18:[function(require,module,exports){
+},{"react":202}],19:[function(require,module,exports){
 var React          = require('react'),
     ReactPropTypes = React.PropTypes;
 
@@ -2021,7 +2063,7 @@ var PromptView = React.createClass({displayName: "PromptView",
 
 module.exports = PromptView;
 
-},{"react":202}],19:[function(require,module,exports){
+},{"react":202}],20:[function(require,module,exports){
 var React          = require('react'),
     ReactPropTypes = React.PropTypes,
     SettingsStore  = require('../stores/SettingsStore'),
@@ -2109,7 +2151,7 @@ var Settings = React.createClass({displayName: "Settings",
 
 module.exports = Settings;
 
-},{"../actions/Actions":4,"../stores/SettingsStore":207,"react":202}],20:[function(require,module,exports){
+},{"../actions/Actions":5,"../stores/SettingsStore":207,"react":202}],21:[function(require,module,exports){
 var Actions         = require('../actions/Actions'),
     AwardsListView  = require('./AwardsListView.react'),
     classNames      = require('classnames'),
@@ -2194,7 +2236,7 @@ var TabManager = React.createClass({displayName: "TabManager",
 
 module.exports = TabManager;
 
-},{"../Constants":3,"../actions/Actions":4,"../stores/NavigationStore":205,"./AwardsListView.react":11,"./Donate.react":12,"./Manage.react":16,"./Settings.react":19,"classnames":25,"react":202}],21:[function(require,module,exports){
+},{"../Constants":4,"../actions/Actions":5,"../stores/NavigationStore":205,"./AwardsListView.react":12,"./Donate.react":13,"./Manage.react":17,"./Settings.react":20,"classnames":25,"react":202}],22:[function(require,module,exports){
 var Actions        = require('../actions/Actions'),
     React          = require('react'),
     ReactPropTypes = React.PropTypes,
@@ -2230,7 +2272,7 @@ var UserAwardList = React.createClass({displayName: "UserAwardList",
 
 module.exports = UserAwardList;
 
-},{"../actions/Actions":4,"react":202,"react-tooltip":43}],22:[function(require,module,exports){
+},{"../actions/Actions":5,"react":202,"react-tooltip":43}],23:[function(require,module,exports){
 var Actions        = require('../actions/Actions'),
     Avatar         = require('./Avatar.react'),
     classNames     = require('classnames'),
@@ -2352,27 +2394,11 @@ var UserItemView = React.createClass({displayName: "UserItemView",
 
 module.exports = UserItemView;
 
-},{"../actions/Actions":4,"./Avatar.react":6,"./PanelControls.react":17,"./UserAwardList.react":21,"classnames":25,"react":202}],23:[function(require,module,exports){
+},{"../actions/Actions":5,"./Avatar.react":7,"./PanelControls.react":18,"./UserAwardList.react":22,"classnames":25,"react":202}],24:[function(require,module,exports){
 var Dispatcher = require('flux').Dispatcher;
 module.exports = new Dispatcher();
 
-},{"flux":28}],24:[function(require,module,exports){
-define('admin/plugins/awards', [], function () {
-    return {
-        init: function () {
-            var React     = require('react'),
-                ReactDom  = require('react-dom'),
-                AwardsApp = require('./components/AwardsApp.react');
-
-            ReactDom.render(
-                React.createElement(AwardsApp, null),
-                document.getElementsByClassName('manage-awards')[0]
-            );
-        }
-    };
-});
-
-},{"./components/AwardsApp.react":9,"react":202,"react-dom":40}],25:[function(require,module,exports){
+},{"flux":28}],25:[function(require,module,exports){
 /*!
   Copyright (c) 2016 Jed Watson.
   Licensed under the MIT License (MIT), see
@@ -24977,14 +25003,15 @@ AppDispatcher.register(function (action) {
     switch (action.actionType) {
         case Constants.EVENT_CREATE_AWARD:
             socket.emit(API.CREATE_AWARD, {
-                name   : action.name,
-                desc   : action.desc,
-                fileId : action.fileId,
-                type   : action.type,
-                cond   : action.cond,
-                condval: action.condval,
-                reason : action.reason,
-                limit  : action.limit
+                name     : action.name,
+                desc     : action.desc,
+                fileId   : action.fileId,
+                type     : action.type,
+                cond     : action.cond,
+                condval  : action.condval,
+                reason   : action.reason,
+                limit    : action.limit,
+                userLimit: action.userLimit
             }, function (error, award) {
                 //Optimistic Award Create
                 _awards.push(award);
@@ -25005,15 +25032,16 @@ AppDispatcher.register(function (action) {
             break;
         case Constants.EVENT_EDIT_AWARD:
             socket.emit(API.EDIT_AWARD, {
-                id     : action.id,
-                name   : action.name,
-                desc   : action.desc,
-                image  : action.file,
-                type   : action.type,
-                cond   : action.cond,
-                condval: action.condval,
-                reason : action.reason,
-                limit  : action.limit
+                id       : action.id,
+                name     : action.name,
+                desc     : action.desc,
+                image    : action.file,
+                type     : action.type,
+                cond     : action.cond,
+                condval  : action.condval,
+                reason   : action.reason,
+                limit    : action.limit,
+                userLimit: action.userLimit
             }, function (error, award) {
                 if (error) {
                     return console.error(error);
@@ -25050,7 +25078,7 @@ function getIndexById(id, list) {
 module.exports = AwardsStore;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../Constants":3,"../dispatcher/AppDispatcher":23,"events":1}],204:[function(require,module,exports){
+},{"../Constants":4,"../dispatcher/AppDispatcher":24,"events":1}],204:[function(require,module,exports){
 (function (global){
 var AppDispatcher = require('../dispatcher/AppDispatcher'),
     assign        = Object.assign,
@@ -25220,7 +25248,7 @@ function getAwards(uid) {
 module.exports = EditUserStore;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../Constants":3,"../dispatcher/AppDispatcher":23,"events":1,"object-assign":39}],205:[function(require,module,exports){
+},{"../Constants":4,"../dispatcher/AppDispatcher":24,"events":1,"object-assign":39}],205:[function(require,module,exports){
 var AppDispatcher = require('../dispatcher/AppDispatcher'),
     EventEmitter  = require('events').EventEmitter,
     assign        = Object.assign,
@@ -25268,7 +25296,7 @@ AppDispatcher.register(function (action) {
 
 module.exports = NavigationStore;
 
-},{"../Constants":3,"../dispatcher/AppDispatcher":23,"events":1}],206:[function(require,module,exports){
+},{"../Constants":4,"../dispatcher/AppDispatcher":24,"events":1}],206:[function(require,module,exports){
 (function (global){
 var Actions       = require('../actions/Actions'),
     AppDispatcher = require('../dispatcher/AppDispatcher'),
@@ -25369,7 +25397,7 @@ function pickUserAt(index) {
 module.exports = SearchUsersStore;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../Constants":3,"../actions/Actions":4,"../dispatcher/AppDispatcher":23,"events":1}],207:[function(require,module,exports){
+},{"../Constants":4,"../actions/Actions":5,"../dispatcher/AppDispatcher":24,"events":1}],207:[function(require,module,exports){
 (function (global){
 var AppDispatcher = require('../dispatcher/AppDispatcher'),
     EventEmitter  = require('events').EventEmitter,
@@ -25432,7 +25460,7 @@ AppDispatcher.register(function (action) {
 module.exports = SettingsStore;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../Constants":3,"../dispatcher/AppDispatcher":23,"events":1}],208:[function(require,module,exports){
+},{"../Constants":4,"../dispatcher/AppDispatcher":24,"events":1}],208:[function(require,module,exports){
 (function (global){
 var AppDispatcher = require('../dispatcher/AppDispatcher'),
     EventEmitter  = require('events').EventEmitter,
@@ -25486,7 +25514,7 @@ AppDispatcher.register(function (action) {
 module.exports = UsersStore;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../Constants":3,"../dispatcher/AppDispatcher":23,"events":1}],209:[function(require,module,exports){
+},{"../Constants":4,"../dispatcher/AppDispatcher":24,"events":1}],209:[function(require,module,exports){
 (function (global){
 var ajaxify = (typeof window !== "undefined" ? window['ajaxify'] : typeof global !== "undefined" ? global['ajaxify'] : null);
 
@@ -25507,4 +25535,4 @@ var PathUtils = {
 module.exports = PathUtils;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}]},{},[24]);
+},{}]},{},[3]);

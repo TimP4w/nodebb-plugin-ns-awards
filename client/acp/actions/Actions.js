@@ -32,7 +32,7 @@ module.exports = {
         });
     },
 
-    createAward: function (name, description, imageFileId, type, condition, condval, reason, limit) {
+    createAward: function (name, description, imageFileId, type, condition, condval, reason, limit, userLimit) {
         AppDispatcher.dispatch({
             actionType: Constants.EVENT_CREATE_AWARD,
             name      : name,
@@ -42,7 +42,8 @@ module.exports = {
             cond      : condition,
             condval   : condval,
             reason    : reason,
-            limit     : limit
+            limit     : limit,
+            userLimit : userLimit
         });
     },
 
@@ -74,7 +75,8 @@ module.exports = {
             cond      : cond,
             condval   : condval,
             reason    : reason,
-            limit     : limit 
+            limit     : limit ,
+            userLimit : userLimit
         });
     },
 
